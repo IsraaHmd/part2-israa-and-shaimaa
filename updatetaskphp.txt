@@ -1,0 +1,33 @@
+<?php
+// Database connection settings
+$servername = "fdb1030.awardspace.net";
+$username = "4508142_mbproject";
+$password = "student@is2Sh";
+$dbname = "4508142_mbproject";
+
+// Create a connection to the database
+$conn = new mysqli($servername, $username, $password, $dbname);
+
+// Check connection
+if ($conn->connect_error) {
+    die("Connection failed: " . $conn->connect_error);
+}
+
+// Get data from the request
+$jsonData = file_get_contents('php://input');
+$data = json_decode($jsonData, true);
+$task_id = intval($data['id']);
+$is_done = intval($data['is_done']); // This will be either 1 or 0
+
+// Update query
+$sql = "UPDATE ToDos SET is_done = $is_done WHERE id = $task_id";
+
+if ($conn->query($sql) === TRUE) {
+    echo json_encode(["status" => "success"]);
+} else {
+    echo json_encode(["status" => "error", "message" => $conn->error]);
+}
+
+// Close the connection
+$conn->close();
+?>

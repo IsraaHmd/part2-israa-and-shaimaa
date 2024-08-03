@@ -1,0 +1,43 @@
+<?php
+header('Content-Type: application/json');
+
+// Retrieve the raw POST data
+$jsonData = file_get_contents('php://input');
+
+// Decode the JSON data into a PHP associative array
+$data = json_decode($jsonData, true);
+
+// Check if decoding was successful
+if ($data !== null) {
+    // Ensure id is treated as an integer
+    $id = intval($data['id']);
+
+    // Database connection parameters
+    $servername = "fdb1030.awardspace.net";
+    $dbusername = "4508142_mbproject";
+    $dbpassword = "student@is2Sh";
+    $dbname = "4508142_mbproject";
+
+    // Create connection
+    $con = mysqli_connect($servername, $dbusername, $dbpassword, $dbname);
+
+    // Check connection
+    if (mysqli_connect_errno()) {
+        die(json_encode(['status' => 'error', 'message' => 'Failed to connect to MySQL: ' . mysqli_connect_error()]));
+    }
+
+    // Delete note
+    $deleteQuery = "DELETE FROM Notes WHERE id = '$id'";
+
+    if (mysqli_query($con, $deleteQuery)) {
+        echo json_encode(['status' => 'success', 'message' => 'Note deleted successfully']);
+    } else {
+        die(json_encode(['status' => 'error', 'message' => 'Error: ' . mysqli_error($con)]));
+    }
+
+    // Close the connection
+    mysqli_close($con);
+} else {
+    echo json_encode(['status' => 'error', 'message' => 'Invalid JSON data']);
+}
+?>

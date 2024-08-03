@@ -1,0 +1,40 @@
+<?php
+header('Content-Type: application/json');
+
+// Retrieve the raw POST data
+$jsonData = file_get_contents('php://input');
+
+// Decode the JSON data into a PHP associative array
+$data = json_decode($jsonData, true);
+
+// Check if decoding was successful
+if ($data !== null) {
+    $id = addslashes(strip_tags($data['id']));
+    $title = addslashes(strip_tags($data['title']));
+    $content = addslashes(strip_tags($data['content']));
+    $modified_time = $data['modified_time'];
+
+    $servername = "fdb1030.awardspace.net";
+    $dbusername = "4508142_mbproject";
+    $dbpassword = "student@is2Sh";
+    $dbname = "4508142_mbproject";
+
+    $con = mysqli_connect($servername, $dbusername, $dbpassword, $dbname);
+
+    if (mysqli_connect_errno()) {
+        die(json_encode(['status' => 'error', 'message' => 'Failed to connect to MySQL: ' . mysqli_connect_error()]));
+    }
+
+    $updateQuery = "UPDATE Notes SET title = '$title', content = '$content', modified_time = '$modified_time' WHERE id = '$id'";
+
+    if (mysqli_query($con, $updateQuery)) {
+        echo json_encode(['status' => 'success', 'message' => 'Note updated successfully']);
+    } else {
+        die(json_encode(['status' => 'error', 'message' => 'Error: ' . mysqli_error($con)]));
+    }
+
+    mysqli_close($con);
+} else {
+    echo json_encode(['status' => 'error', 'message' => 'Invalid JSON data']);
+}
+?>

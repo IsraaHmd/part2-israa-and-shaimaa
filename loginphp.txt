@@ -1,0 +1,58 @@
+<?php
+// Retrieve the raw POST data
+$jsonData = file_get_contents('php://input');
+
+// Decode the JSON data into a PHP associative array
+$data = json_decode($jsonData, true);
+
+// Check if decoding was successful
+if ($data !== null) {
+    $username = addslashes(strip_tags($data['username']));
+    $password = addslashes(strip_tags($data['password']));
+
+    // Database connection parameters
+    $servername = "fdb1030.awardspace.net";
+    $dbusername = "4508142_mbproject";
+    $dbpassword = "student@is2Sh";
+    $dbname = "4508142_mbproject";
+
+    // Create connection
+    $con = mysqli_connect($servername, $dbusername, $dbpassword, $dbname);
+
+    // Check connection
+    if (mysqli_connect_errno()) {
+        die(json_encode(["status" => "error", "message" => "Failed to connect to MySQL: " . mysqli_connect_error()]));
+    }
+
+    // Check if username exists
+    $checkQuery = "SELECT * FROM Users WHERE username = '$username'";
+    $result = mysqli_query($con, $checkQuery);
+
+    if (mysqli_num_rows($result) > 0) {
+        $user = mysqli_fetch_assoc($result);
+        $passwordHash = $user['password_hash'];
+
+        // Verify the password
+        if (password_verify($password, $passwordHash)) {
+            // Return user ID and username on successful login
+            echo json_encode([
+                "status" => "success",
+                "message" => "Login successful",
+                "user" => [
+                    "id" => $user['id'],
+                    "username" => $user['username'],
+                ],
+            ]);
+        } else {
+            echo json_encode(["status" => "error", "message" => "Incorrect password"]);
+        }
+    } else {
+        echo json_encode(["status" => "error", "message" => "User not found"]);
+    }
+
+    // Close the connection
+    mysqli_close($con);
+} else {
+    echo json_encode(["status" => "error", "message" => "Invalid JSON data"]);
+}
+?>

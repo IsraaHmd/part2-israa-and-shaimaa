@@ -1,0 +1,60 @@
+<?php
+// Retrieve the raw POST data
+$jsonData = file_get_contents('php://input');
+// Decode the JSON data into a PHP associative array
+$data = json_decode($jsonData, true);
+
+// Check if decoding was successful
+if ($data !== null) {
+    $user_id = intval($data['user_id']);
+
+    // Database connection settings
+    $servername = "fdb1030.awardspace.net";
+    $username = "4508142_mbproject";
+    $password = "student@is2Sh";
+    $dbname = "4508142_mbproject";
+
+    // Create a connection to the database
+    $conn = new mysqli($servername, $username, $password, $dbname);
+
+    // Check the connection
+    if ($conn->connect_error) {
+        echo json_encode(["status" => "error", "message" => "Connection failed: " . $conn->connect_error]);
+        exit();
+    }
+
+    // SQL query to fetch tasks for a specific user
+    $sql = "SELECT id, todo_text, is_done FROM ToDos WHERE user_id = ?";
+
+    // Prepare and bind
+    $stmt = $conn->prepare($sql);
+    $stmt->bind_param("i", $user_id);
+    $stmt->execute();
+
+    $result = $stmt->get_result();
+
+    $response = array();
+
+    if ($result->num_rows > 0) {
+        // Output data of each row
+        while ($row = $result->fetch_assoc()) {
+            $response[] = array(
+                'id' => $row['id'],
+                'todo_text' => $row['todo_text'],
+                'is_done' => $row['is_done']
+            );
+        }
+    } else {
+        $response = [];
+    }
+
+    $stmt->close();
+    $conn->close();
+
+    // Set the header to return JSON
+    header('Content-Type: application/json');
+    echo json_encode($response);
+} else {
+    echo json_encode(["status" => "error", "message" => "Invalid JSON data"]);
+}
+?>

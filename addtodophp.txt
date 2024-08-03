@@ -1,0 +1,40 @@
+<?php
+// Retrieve the raw POST data
+$jsonData = file_get_contents('php://input');
+// Decode the JSON data into a PHP associative array
+$data = json_decode($jsonData, true);
+
+// Check if decoding was successful
+if ($data !== null) {
+    $user_id = intval($data['user_id']);
+    $todo_text = addslashes(strip_tags($data['todo_text']));
+
+    // Database connection
+    $servername = "fdb1030.awardspace.net";
+    $username = "4508142_mbproject";
+    $password = "student@is2Sh";
+    $dbname = "4508142_mbproject";
+    
+    $con = mysqli_connect($servername, $username, $password, $dbname);
+
+    // Check connection
+    if (mysqli_connect_errno()) {
+        echo json_encode(["status" => "error", "message" => "Failed to connect to MySQL: " . mysqli_connect_error()]);
+        exit();
+    }
+
+    // Insert the task into the database
+    $sql = "INSERT INTO ToDos (user_id, todo_text) VALUES ($user_id, '$todo_text')";
+
+    if (mysqli_query($con, $sql)) {
+        echo json_encode(["status" => "success", "message" => "Task saved successfully"]);
+    } else {
+        echo json_encode(["status" => "error", "message" => "Error saving task: " . mysqli_error($con)]);
+    }
+
+    // Close the database connection
+    mysqli_close($con);
+} else {
+    echo json_encode(["status" => "error", "message" => "Invalid JSON data"]);
+}
+?>
